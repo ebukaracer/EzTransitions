@@ -3,6 +3,8 @@
 
 **EzTransitions** is a Unity package that provides a simple and flexible way to create and manage scene transitions. It includes tools for creating custom transitions and utilities for handling asynchronous scene loading with transition effects.  
 
+ [Read Docs](https://ebukaracer.github.io/EzTransitions)
+ 
 ![gif](https://raw.githubusercontent.com/ebukaracer/ebukaracer/unlisted/EzTransitions-Images/Preview.gif)
 
 ## Features  
@@ -59,6 +61,8 @@ public class SimpleTransitionExample : MonoBehaviour
 ```
 
 ## Samples and Best Practices
+After Installation, use the menu option `Racer > EzTransitions > Import Elements` to import this package's essential elements(scripts, prefabs) to speed up workflow.
+
 Check out this package's sample scene by importing it from the package manager *sample's* tab. It showcases the built-in transitions provided by this package and their usage.
 
 *To remove this package completely(leaving no trace), navigate to: `Racer > EzTransitions > Remove package`*
