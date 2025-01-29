@@ -26,7 +26,7 @@ After installation, navigate to `Racer > EzTransitions > Import Elements` to imp
 ## Quick Usage
 *Loading into Next Scene Asynchronously Using `SceneLoader.Instance`*
 ```csharp
-using Racer.EzTransitions;
+using Racer.EzTransitions.Core;
 using UnityEngine;
 
 public class LoadSceneExample : MonoBehaviour
@@ -44,7 +44,7 @@ public class LoadSceneExample : MonoBehaviour
 
 *Simple Transitioning Using `TransitionManager.Instance`*
 ```csharp
-using Racer.EzTransitions;
+using Racer.EzTransitions.Core;
 using UnityEngine;
 
 public class SimpleTransitionExample : MonoBehaviour
