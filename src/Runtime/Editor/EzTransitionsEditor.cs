@@ -25,9 +25,10 @@ namespace Racer.EzTransitions.Editor
         private static readonly string SourcePath = $"Packages/{PkgId}/Elements";
         private const string ElementsPath = RootPath + "/Elements";
 
+        private const string ExistingTransitionName = "SimpleFade";
         private const string TransitionBasePath = ElementsPath + "/Transitions";
-        private const string TemplateFolderPath = ElementsPath + "/Transitions/SimpleFade";
-        private string _transitionName = "NewTransition";
+        private const string TemplateFolderPath = ElementsPath + "/Transitions/" + ExistingTransitionName;
+        private string _transitionNameField = "NewTransition";
 
 
         [MenuItem(ContextMenuPath + "Transition Creator", priority = 0)]
@@ -90,16 +91,17 @@ namespace Racer.EzTransitions.Editor
         {
             GUILayout.Space(10);
 
+            _transitionNameField = EditorGUILayout.TextField("Transition Name", _transitionNameField);
+
+            GUILayout.Space(10);
+
             EditorGUI.BeginDisabledGroup(!_isElementsImported);
-            _transitionName = EditorGUILayout.TextField("Transition Name", _transitionName);
 
-            GUILayout.Space(5);
-
-            if (GUILayout.Button(Styles.CreateBtn))
+            if (GUILayout.Button(Styles.DuplicateBtn))
             {
                 try
                 {
-                    CreateTransition();
+                    CreateFromExistingTransition();
                 }
                 catch (Exception e)
                 {
@@ -107,13 +109,12 @@ namespace Racer.EzTransitions.Editor
                 }
             }
 
-            GUILayout.Space(5);
             EditorGUI.EndDisabledGroup();
 
             if (_isElementsImported)
             {
                 EditorGUILayout.HelpBox(
-                    "A new transition directory, based on the 'SimpleFade' transition, will be created. " +
+                    $"A new transition directory, based upon '{ExistingTransitionName}' transition, will be created. " +
                     "Feel free to customize the animations within it to match your desired style.",
                     MessageType.Info);
             }
@@ -131,34 +132,34 @@ namespace Racer.EzTransitions.Editor
                 ImportElements();
         }
 
-        private void CreateTransition()
+        private void CreateFromExistingTransition()
         {
-            if (string.IsNullOrWhiteSpace(_transitionName))
+            if (string.IsNullOrWhiteSpace(_transitionNameField))
             {
                 Debug.LogError("Transition name cannot be empty.");
                 return;
             }
 
-            var newTransitionPath = Path.Combine(TransitionBasePath, _transitionName);
+            var newTransitionPath = Path.Combine(TransitionBasePath, _transitionNameField);
 
             // Check if the folder already exists
             if (AssetDatabase.IsValidFolder(newTransitionPath))
             {
-                Debug.LogError($"A transition with the name '{_transitionName}' already exists.");
+                Debug.LogError($"A transition with the name '{_transitionNameField}' already exists.");
                 return;
             }
 
             // Create the transition folder
-            AssetDatabase.CreateFolder(TransitionBasePath, _transitionName);
+            AssetDatabase.CreateFolder(TransitionBasePath, _transitionNameField);
 
             // Duplicate the template assets
             string[] filesToDuplicate =
             {
-                "SimpleFade.asset",
-                "SimpleFade.controller",
-                "SimpleFade_In.anim",
-                "SimpleFade_Out.anim",
-                "SimpleFade.prefab"
+                $"{ExistingTransitionName}.asset",
+                $"{ExistingTransitionName}.controller",
+                $"{ExistingTransitionName}_In.anim",
+                $"{ExistingTransitionName}_Out.anim",
+                $"{ExistingTransitionName}.prefab"
             };
 
             var duplicatedPaths = new string[filesToDuplicate.Length];
@@ -166,7 +167,7 @@ namespace Racer.EzTransitions.Editor
             for (var i = 0; i < filesToDuplicate.Length; i++)
             {
                 var sourcePath = Path.Combine(TemplateFolderPath, filesToDuplicate[i]);
-                var destPath = Path.Combine(newTransitionPath, _transitionName);
+                var destPath = Path.Combine(newTransitionPath, _transitionNameField);
 
                 switch (i)
                 {
@@ -190,10 +191,9 @@ namespace Racer.EzTransitions.Editor
                 else
                 {
                     Debug.LogError(
-                        "Operation failed! Ensure the elements for this package are imported and available." +
-                        $"\nThe file '{sourcePath}' was also not found.");
+                        $"Operation failed! Something is missing.\nEither the 'Elements' folder or the path: '{sourcePath}' for the existing transition is missing.");
 
-                    DirUtils.DeleteDirectory(TransitionBasePath);
+                    DirUtils.DeleteDirectory(newTransitionPath);
                     AssetDatabase.Refresh();
 
                     return;
@@ -214,8 +214,8 @@ namespace Racer.EzTransitions.Editor
             // Ensure both animations are assigned in the Animator Controller
             if (newController)
             {
-                var inState = FindOrCreateState(newController, "SimpleFade_In");
-                var outState = FindOrCreateState(newController, "SimpleFade_Out");
+                var inState = InitOrCreateState(newController, $"{ExistingTransitionName}_In");
+                var outState = InitOrCreateState(newController, $"{ExistingTransitionName}_Out");
 
                 if (inState)
                 {
@@ -254,13 +254,16 @@ namespace Racer.EzTransitions.Editor
             Selection.activeObject = AssetDatabase.LoadAssetAtPath<Object>(newTransitionPath);
 
             Debug.Log(
-                $"Transition '{_transitionName}' created successfully. Feel free to customize the animations to your taste.");
+                $"Transition '{_transitionNameField}' created successfully. Feel free to customize the animations to your taste.",
+                newTransition);
         }
 
-        private static AnimatorState FindOrCreateState(AnimatorController controller, string stateName)
+        private static AnimatorState InitOrCreateState(AnimatorController controller, string stateName)
         {
             foreach (var layer in controller.layers)
             {
+                if (layer.stateMachine.states == null) continue;
+
                 foreach (var state in layer.stateMachine.states)
                 {
                     if (state.state.name == stateName)
@@ -269,10 +272,8 @@ namespace Racer.EzTransitions.Editor
             }
 
             // If not found, create a new state
-            var newState = controller.layers[0].stateMachine.AddState(stateName);
-            return newState;
+            return controller.layers[0].stateMachine.AddState(stateName);
         }
-
 
         private static void RemoveProgress()
         {
@@ -333,8 +334,8 @@ namespace Racer.EzTransitions.Editor
 
     internal static class Styles
     {
-        public static readonly GUIContent CreateBtn =
-            new("Create Transition", "Creates a new transition.");
+        public static readonly GUIContent DuplicateBtn =
+            new("Create from Existing?", "Creates a new transition based upon an existing one.");
 
         public static readonly GUIContent ImportElementsBtn =
             new("Import Elements", "Imports elements required for creating custom transitions.");

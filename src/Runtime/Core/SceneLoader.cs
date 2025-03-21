@@ -146,16 +146,17 @@ namespace Racer.EzTransitions.Core
 
             OnSceneLoadProgress?.Invoke(SceneLoadProgress.Done);
 
+            if (delayAfterLoad)
+                yield return Utility.GetWaitForSeconds(useTransition ? 0 : loadDelay);
+
+            scene.allowSceneActivation = true;
+
             if (_transitionSettingsRef)
             {
                 _transitionSettingsRef.TransitOut();
                 yield return Utility.GetWaitForSeconds(transition.TransitionTime);
             }
 
-            if (delayAfterLoad)
-                yield return Utility.GetWaitForSeconds(useTransition ? 0 : loadDelay);
-
-            scene.allowSceneActivation = true;
             _isLoading = false;
         }
     }
