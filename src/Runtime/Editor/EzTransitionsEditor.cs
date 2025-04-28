@@ -25,9 +25,9 @@ namespace Racer.EzTransitions.Editor
         private static readonly string SourcePath = $"Packages/{PkgId}/Elements";
         private const string ElementsPath = RootPath + "/Elements";
 
-        private const string ExistingTransitionName = "SimpleFade";
+        private static Transition _assignedTransition;
+        private const string DefaultTransitionName = "SimpleFade";
         private const string TransitionBasePath = ElementsPath + "/Transitions";
-        private const string TemplateFolderPath = ElementsPath + "/Transitions/" + ExistingTransitionName;
         private string _transitionNameField = "NewTransition";
 
 
@@ -36,6 +36,8 @@ namespace Racer.EzTransitions.Editor
         {
             var window = GetWindow<EzTransitionsEditor>("Transition Creator");
             window.maxSize = window.minSize = new Vector2(Dimension, Dimension / 2.5f);
+
+            AutoAssignExistingDefaultTransition();
         }
 
         [MenuItem(ContextMenuPath + "Import Elements", false, priority = 1)]
@@ -43,9 +45,13 @@ namespace Racer.EzTransitions.Editor
         {
             if (Directory.Exists(ElementsPath))
             {
-                Debug.Log(
-                    $"Root directory already exists: '{ElementsPath}'" +
-                    "\nIf you would like to re-import, remove and reinstall this package.");
+                Debug.LogWarning($"Root directory already exists: '{ElementsPath}'");
+
+                if (HasOpenInstances<EzTransitionsEditor>())
+                    EditorUtility.DisplayDialog("Transition Creator",
+                        "Please reopen the Transition Creator window and try again.\n\nIf issue persists, remove and reinstall this package.",
+                        "OK");
+
                 return;
             }
 
@@ -87,9 +93,20 @@ namespace Racer.EzTransitions.Editor
             EditorApplication.update += RemoveProgress;
         }
 
+        private static void AutoAssignExistingDefaultTransition()
+        {
+            _assignedTransition =
+                AssetDatabase.LoadAssetAtPath<Transition>(
+                    $"{TransitionBasePath}/{DefaultTransitionName}/{DefaultTransitionName}.asset");
+        }
+
         private void OnGUI()
         {
             GUILayout.Space(10);
+
+            _assignedTransition =
+                (Transition)EditorGUILayout.ObjectField("Existing Transition", _assignedTransition, typeof(Transition),
+                    false);
 
             _transitionNameField = EditorGUILayout.TextField("Transition Name", _transitionNameField);
 
@@ -111,41 +128,55 @@ namespace Racer.EzTransitions.Editor
 
             EditorGUI.EndDisabledGroup();
 
-            if (_isElementsImported)
+            if (_isElementsImported && _assignedTransition)
             {
                 EditorGUILayout.HelpBox(
-                    $"A new transition directory, based upon '{ExistingTransitionName}' transition, will be created. " +
+                    $"A new transition directory, based upon '{_assignedTransition.name}' transition will be created. " +
                     "Feel free to customize the animations within it to match your desired style.",
                     MessageType.Info);
             }
-            else
+            else if (!_assignedTransition)
+            {
+                EditorGUILayout.HelpBox("Please assign an existing transition first.", MessageType.Warning);
+            }
+            else if (!_isElementsImported)
             {
                 EditorGUILayout.HelpBox(
                     "Some of this package's elements are not available." +
                     "\nClick the button below to fully import them.",
                     MessageType.Warning);
+
+                GUILayout.Space(5);
+
+                if (GUILayout.Button(Styles.ImportElementsBtn))
+                    ImportElements();
             }
-
-            GUILayout.Space(5);
-
-            if (!_isElementsImported && GUILayout.Button(Styles.ImportElementsBtn))
-                ImportElements();
         }
 
         private void CreateFromExistingTransition()
         {
-            if (string.IsNullOrWhiteSpace(_transitionNameField))
+            var assignedTransitionName = _assignedTransition?.name;
+
+            if (string.IsNullOrWhiteSpace(assignedTransitionName))
             {
-                Debug.LogError("Transition name cannot be empty.");
+                Debug.LogError("The existing transition field cannot be null.");
                 return;
             }
+
+            if (string.IsNullOrWhiteSpace(_transitionNameField))
+            {
+                Debug.LogError("The new transition name field cannot be empty.");
+                return;
+            }
+
 
             var newTransitionPath = Path.Combine(TransitionBasePath, _transitionNameField);
 
             // Check if the folder already exists
             if (AssetDatabase.IsValidFolder(newTransitionPath))
             {
-                Debug.LogError($"A transition with the name '{_transitionNameField}' already exists.");
+                Debug.LogError(
+                    $"A transition with the name '{_transitionNameField}' already exists, delete the directory and try again.");
                 return;
             }
 
@@ -155,18 +186,18 @@ namespace Racer.EzTransitions.Editor
             // Duplicate the template assets
             string[] filesToDuplicate =
             {
-                $"{ExistingTransitionName}.asset",
-                $"{ExistingTransitionName}.controller",
-                $"{ExistingTransitionName}_In.anim",
-                $"{ExistingTransitionName}_Out.anim",
-                $"{ExistingTransitionName}.prefab"
+                $"{assignedTransitionName}.asset",
+                $"{assignedTransitionName}.controller",
+                $"{assignedTransitionName}_In.anim",
+                $"{assignedTransitionName}_Out.anim",
+                $"{assignedTransitionName}.prefab"
             };
 
             var duplicatedPaths = new string[filesToDuplicate.Length];
 
             for (var i = 0; i < filesToDuplicate.Length; i++)
             {
-                var sourcePath = Path.Combine(TemplateFolderPath, filesToDuplicate[i]);
+                var sourcePath = Path.Combine($"{TransitionBasePath}/{assignedTransitionName}", filesToDuplicate[i]);
                 var destPath = Path.Combine(newTransitionPath, _transitionNameField);
 
                 switch (i)
@@ -214,8 +245,8 @@ namespace Racer.EzTransitions.Editor
             // Ensure both animations are assigned in the Animator Controller
             if (newController)
             {
-                var inState = InitOrCreateState(newController, $"{ExistingTransitionName}_In");
-                var outState = InitOrCreateState(newController, $"{ExistingTransitionName}_Out");
+                var inState = InitOrCreateState(newController, $"{assignedTransitionName}_In");
+                var outState = InitOrCreateState(newController, $"{assignedTransitionName}_Out");
 
                 if (inState)
                 {

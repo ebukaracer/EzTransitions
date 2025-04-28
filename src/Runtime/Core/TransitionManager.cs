@@ -7,16 +7,6 @@ using UnityEngine;
 namespace Racer.EzTransitions.Core
 {
     /// <summary>
-    /// Enum representing the progress states of a transition.
-    /// </summary>
-    public enum TransitionStateProgress
-    {
-        InStarted,
-        OutStarted,
-        Done
-    }
-
-    /// <summary>
     /// Manages transitions within the application.
     /// <remarks>
     /// Ensure <see cref="TransitionManager"/> prefab or a gameobject containing this script is present in the scene before usage.

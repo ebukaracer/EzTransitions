@@ -6,13 +6,6 @@ using UnityEngine.SceneManagement;
 
 namespace Racer.EzTransitions.Core
 {
-    public enum SceneLoadProgress
-    {
-        Ready,
-        Started,
-        Done
-    }
-
     /// <summary>
     /// Singleton class that manages asynchronous scene loading with optional transition effects.
     /// <remarks>
@@ -28,6 +21,7 @@ namespace Racer.EzTransitions.Core
         private TransitionSettings _transitionSettingsRef;
 
         public event Action<SceneLoadProgress> OnSceneLoadProgress;
+        public event Action<TransitionStateProgress> OnTransitionStateProgress;
 
         // @formatter:off
         [Header("LOADING")] 
@@ -49,7 +43,7 @@ namespace Racer.EzTransitions.Core
         [Space(5)]
         [SerializeField]
         [Header("TRANSITION")]
-        [Tooltip("Whether or not to use transition.")]
+        [Tooltip("Whether or not to use transition for scene loading.")]
         private bool useTransition;
         // @formatter:on
 
@@ -65,10 +59,8 @@ namespace Racer.EzTransitions.Core
         [SerializeField] private Transition transition;
 
 
-        protected override void Awake()
+        private void Start()
         {
-            base.Awake();
-
             if (useTransition && !transition)
             {
                 Debug.LogError(
@@ -119,6 +111,8 @@ namespace Racer.EzTransitions.Core
                 _transitionSettingsRef.transition = transition;
 
                 _transitionSettingsRef.TransitIn();
+                OnTransitionStateProgress?.Invoke(TransitionStateProgress.InStarted);
+
                 yield return Utility.GetWaitForSeconds(transition.TransitionTime);
             }
             else if (useTransition)
@@ -154,7 +148,11 @@ namespace Racer.EzTransitions.Core
             if (_transitionSettingsRef)
             {
                 _transitionSettingsRef.TransitOut();
+                OnTransitionStateProgress?.Invoke(TransitionStateProgress.OutStarted);
+
                 yield return Utility.GetWaitForSeconds(transition.TransitionTime);
+
+                OnTransitionStateProgress?.Invoke(TransitionStateProgress.Done);
             }
 
             _isLoading = false;
