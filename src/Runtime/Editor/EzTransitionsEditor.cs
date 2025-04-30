@@ -1,34 +1,28 @@
 #if UNITY_EDITOR
-using System;
 using System.IO;
-using Racer.EzTransitions.Core;
 using UnityEditor;
-using UnityEditor.Animations;
 using UnityEditor.PackageManager;
 using UnityEditor.PackageManager.Requests;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace Racer.EzTransitions.Editor
 {
-    internal class EzTransitionsEditor : EditorWindow
+    internal partial class EzTransitionsEditor : EditorWindow
     {
         private const float Dimension = 400;
 
         private static RemoveRequest _removeRequest;
         private static bool _isElementsImported;
         private const string PkgId = "com.racer.eztransitions";
+        private const string AssetPkgId = "EzTransitions.unitypackage";
 
         private const string ContextMenuPath = "Racer/EzTransitions/";
         private const string RootPath = "Assets/EzTransitions";
         private const string SamplesPath = "Assets/Samples/EzTransitions";
-        private static readonly string SourcePath = $"Packages/{PkgId}/Elements";
-        private const string ElementsPath = RootPath + "/Elements";
+        private const string ElementsAssetPath = RootPath + "/Elements";
 
-        private static Transition _assignedTransition;
-        private const string DefaultTransitionName = "SimpleFade";
-        private const string TransitionBasePath = ElementsPath + "/Transitions";
-        private string _transitionNameField = "NewTransition";
+        private const string ImportElementsContextMenuPath = ContextMenuPath + "Import Elements";
+        private const string ForceImportElementsContextMenuPath = ContextMenuPath + "Import Elements(Force)";
 
 
         [MenuItem(ContextMenuPath + "Transition Creator", priority = 0)]
@@ -40,50 +34,39 @@ namespace Racer.EzTransitions.Editor
             AutoAssignExistingDefaultTransition();
         }
 
-        [MenuItem(ContextMenuPath + "Import Elements", false, priority = 1)]
+        [MenuItem(ImportElementsContextMenuPath, false, priority = 1)]
         private static void ImportElements()
         {
-            if (Directory.Exists(ElementsPath))
-            {
-                Debug.LogWarning($"Root directory already exists: '{ElementsPath}'");
+            var packagePath = $"Packages/{PkgId}/Elements/{AssetPkgId}";
 
-                if (HasOpenInstances<EzTransitionsEditor>())
-                    EditorUtility.DisplayDialog("Transition Creator",
-                        "Please reopen the Transition Creator window and try again.\n\nIf issue persists, remove and reinstall this package.",
-                        "OK");
-
-                return;
-            }
-
-            if (!Directory.Exists(SourcePath))
+            if (File.Exists(packagePath))
             {
-                Debug.LogError(
-                    "Source path is missing. Please ensure this package is installed correctly," +
-                    $" otherwise reinstall it.\nNonexistent Path: {SourcePath}");
-                return;
-            }
+                AssetDatabase.ImportPackage(packagePath, true);
 
-            try
-            {
-                DirUtils.CreateDirectory(RootPath);
-                Directory.Move(SourcePath, ElementsPath);
-                DirUtils.DeleteEmptyMetaFiles(SourcePath);
-                AssetDatabase.Refresh();
-                _isElementsImported = AssetDatabase.IsValidFolder(ElementsPath);
-                Debug.Log($"Imported successfully at '{ElementsPath}'");
+                if (!_isElementsImported)
+                    AssetDatabase.importPackageCompleted += ReopenWindow;
             }
-            catch (Exception e)
-            {
-                Debug.LogError(
-                    $"An error occurred while importing this package's elements: {e.Message}\n{e.StackTrace}");
-            }
+            else
+                EditorUtility.DisplayDialog("Missing Package File", $"{AssetPkgId} not found in the package.", "OK");
         }
 
-        [MenuItem(ContextMenuPath + "Import Elements", true, priority = 1)]
+        [MenuItem(ForceImportElementsContextMenuPath, false, priority = 1)]
+        private static void ForceImportElements()
+        {
+            ImportElements();
+        }
+
+        [MenuItem(ImportElementsContextMenuPath, true, priority = 1)]
         private static bool ValidateImportElements()
         {
-            _isElementsImported = AssetDatabase.IsValidFolder(ElementsPath);
+            _isElementsImported = AssetDatabase.IsValidFolder(ElementsAssetPath);
             return !_isElementsImported;
+        }
+
+        [MenuItem(ForceImportElementsContextMenuPath, true, priority = 1)]
+        private static bool ValidateForceImportElements()
+        {
+            return _isElementsImported;
         }
 
         [MenuItem(ContextMenuPath + "Remove Package(recommended)", priority = 2)]
@@ -93,218 +76,18 @@ namespace Racer.EzTransitions.Editor
             EditorApplication.update += RemoveProgress;
         }
 
-        private static void AutoAssignExistingDefaultTransition()
+        private static void ReopenWindow(string pkgName = null)
         {
-            _assignedTransition =
-                AssetDatabase.LoadAssetAtPath<Transition>(
-                    $"{TransitionBasePath}/{DefaultTransitionName}/{DefaultTransitionName}.asset");
+            if (AssetDatabase.IsValidFolder(RootPath) && HasOpenInstances<EzTransitionsEditor>())
+            {
+                GetWindow<EzTransitionsEditor>().Close();
+                ValidateImportElements();
+                DisplayWindow();
+            }
+
+            AssetDatabase.importPackageCompleted -= ReopenWindow;
         }
 
-        private void OnGUI()
-        {
-            GUILayout.Space(10);
-
-            _assignedTransition =
-                (Transition)EditorGUILayout.ObjectField("Existing Transition", _assignedTransition, typeof(Transition),
-                    false);
-
-            _transitionNameField = EditorGUILayout.TextField("Transition Name", _transitionNameField);
-
-            GUILayout.Space(10);
-
-            EditorGUI.BeginDisabledGroup(!_isElementsImported);
-
-            if (GUILayout.Button(Styles.DuplicateBtn))
-            {
-                try
-                {
-                    CreateFromExistingTransition();
-                }
-                catch (Exception e)
-                {
-                    Debug.LogError($"An error occurred while creating the transition: {e.Message}\n{e.StackTrace}");
-                }
-            }
-
-            EditorGUI.EndDisabledGroup();
-
-            if (_isElementsImported && _assignedTransition)
-            {
-                EditorGUILayout.HelpBox(
-                    $"A new transition directory, based upon '{_assignedTransition.name}' transition will be created. " +
-                    "Feel free to customize the animations within it to match your desired style.",
-                    MessageType.Info);
-            }
-            else if (!_assignedTransition)
-            {
-                EditorGUILayout.HelpBox("Please assign an existing transition first.", MessageType.Warning);
-            }
-            else if (!_isElementsImported)
-            {
-                EditorGUILayout.HelpBox(
-                    "Some of this package's elements are not available." +
-                    "\nClick the button below to fully import them.",
-                    MessageType.Warning);
-
-                GUILayout.Space(5);
-
-                if (GUILayout.Button(Styles.ImportElementsBtn))
-                    ImportElements();
-            }
-        }
-
-        private void CreateFromExistingTransition()
-        {
-            var assignedTransitionName = _assignedTransition?.name;
-
-            if (string.IsNullOrWhiteSpace(assignedTransitionName))
-            {
-                Debug.LogError("The existing transition field cannot be null.");
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(_transitionNameField))
-            {
-                Debug.LogError("The new transition name field cannot be empty.");
-                return;
-            }
-
-
-            var newTransitionPath = Path.Combine(TransitionBasePath, _transitionNameField);
-
-            // Check if the folder already exists
-            if (AssetDatabase.IsValidFolder(newTransitionPath))
-            {
-                Debug.LogError(
-                    $"A transition with the name '{_transitionNameField}' already exists, delete the directory and try again.");
-                return;
-            }
-
-            // Create the transition folder
-            AssetDatabase.CreateFolder(TransitionBasePath, _transitionNameField);
-
-            // Duplicate the template assets
-            string[] filesToDuplicate =
-            {
-                $"{assignedTransitionName}.asset",
-                $"{assignedTransitionName}.controller",
-                $"{assignedTransitionName}_In.anim",
-                $"{assignedTransitionName}_Out.anim",
-                $"{assignedTransitionName}.prefab"
-            };
-
-            var duplicatedPaths = new string[filesToDuplicate.Length];
-
-            for (var i = 0; i < filesToDuplicate.Length; i++)
-            {
-                var sourcePath = Path.Combine($"{TransitionBasePath}/{assignedTransitionName}", filesToDuplicate[i]);
-                var destPath = Path.Combine(newTransitionPath, _transitionNameField);
-
-                switch (i)
-                {
-                    case 2:
-                        destPath += "_In";
-                        break;
-                    case 3:
-                        destPath += "_Out";
-                        break;
-                }
-
-                destPath += Path.GetExtension(filesToDuplicate[i]);
-
-                if (File.Exists(sourcePath))
-                {
-                    if (AssetDatabase.CopyAsset(sourcePath, destPath))
-                        duplicatedPaths[i] = destPath;
-                    else
-                        Debug.LogWarning($"Skipped some files!.\nSource: {sourcePath}, Destination: {destPath}");
-                }
-                else
-                {
-                    Debug.LogError(
-                        $"Operation failed! Something is missing.\nEither the 'Elements' folder or the path: '{sourcePath}' for the existing transition is missing.");
-
-                    DirUtils.DeleteDirectory(newTransitionPath);
-                    AssetDatabase.Refresh();
-
-                    return;
-                }
-            }
-
-            // Transition ScriptableObject
-            var newTransition = AssetDatabase.LoadAssetAtPath<Transition>(duplicatedPaths[0]);
-            // Animator Controller
-            var newController = AssetDatabase.LoadAssetAtPath<AnimatorController>(duplicatedPaths[1]);
-            // In Animation
-            var newInClip = AssetDatabase.LoadAssetAtPath<AnimationClip>(duplicatedPaths[2]);
-            // Out Animation
-            var newOutClip = AssetDatabase.LoadAssetAtPath<AnimationClip>(duplicatedPaths[3]);
-            // Prefab
-            var newPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(duplicatedPaths[4]);
-
-            // Ensure both animations are assigned in the Animator Controller
-            if (newController)
-            {
-                var inState = InitOrCreateState(newController, $"{assignedTransitionName}_In");
-                var outState = InitOrCreateState(newController, $"{assignedTransitionName}_Out");
-
-                if (inState)
-                {
-                    inState.motion = newInClip;
-                    inState.name = newInClip.name;
-                }
-
-                if (outState)
-                {
-                    outState.motion = newOutClip;
-                    outState.name = newOutClip.name;
-                }
-            }
-
-            // Assign the Animator Controller to the prefab
-            if (newPrefab)
-            {
-                var animator = newPrefab.GetComponent<Animator>();
-
-                if (!animator)
-                    animator = newPrefab.AddComponent<Animator>();
-
-                animator.runtimeAnimatorController = newController;
-
-                // Update the prefab
-                PrefabUtility.SaveAsPrefabAsset(newPrefab, duplicatedPaths[4]);
-            }
-
-            // Update the transition gameobject reference
-            if (newTransition)
-                newTransition.TransitionGo = newPrefab;
-
-            // Refresh and focus on the created folder
-            AssetDatabase.Refresh();
-            EditorUtility.FocusProjectWindow();
-            Selection.activeObject = AssetDatabase.LoadAssetAtPath<Object>(newTransitionPath);
-
-            Debug.Log(
-                $"Transition '{_transitionNameField}' created successfully. Feel free to customize the animations to your taste.",
-                newTransition);
-        }
-
-        private static AnimatorState InitOrCreateState(AnimatorController controller, string stateName)
-        {
-            foreach (var layer in controller.layers)
-            {
-                if (layer.stateMachine.states == null) continue;
-
-                foreach (var state in layer.stateMachine.states)
-                {
-                    if (state.state.name == stateName)
-                        return state.state;
-                }
-            }
-
-            // If not found, create a new state
-            return controller.layers[0].stateMachine.AddState(stateName);
-        }
 
         private static void RemoveProgress()
         {
@@ -339,20 +122,7 @@ namespace Racer.EzTransitions.Editor
             DeleteEmptyMetaFiles(path);
         }
 
-        public static void CreateDirectory(string path)
-        {
-            if (!Directory.Exists(path))
-                Directory.CreateDirectory(path);
-        }
-
-        public static void MoveMetaFile(string source, string destination)
-        {
-            if (!File.Exists(source + ".meta")) return;
-
-            File.Move(source + ".meta", destination + ".meta");
-        }
-
-        public static void DeleteEmptyMetaFiles(string directory)
+        private static void DeleteEmptyMetaFiles(string directory)
         {
             if (Directory.Exists(directory)) return;
 

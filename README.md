@@ -1,10 +1,9 @@
 # EzTransitions
-
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-blue)](http://makeapullrequest.com) [![License: MIT](https://img.shields.io/badge/License-MIT-blue)](https://ebukaracer.github.io/ebukaracer/md/LICENSE.html)
 
 **EzTransitions** is a Unity package that provides a simple and flexible way to create and manage scene transitions. It includes tools for creating custom transitions and utilities for handling asynchronous scene loading with transition effects.  
 
- [Read Docs](https://ebukaracer.github.io/EzTransitions)
+ [View in DocFx](https://ebukaracer.github.io/EzTransitions)
  
 ![gif](https://raw.githubusercontent.com/ebukaracer/ebukaracer/unlisted/EzTransitions-Images/Preview.gif)
 
@@ -25,7 +24,7 @@
 
 ## Setup
 
-After installation, navigate to `Racer > EzTransitions > Import Elements` to import this package's elements for scene-loading, creating and managing custom transitions.
+After installation, navigate to `Racer > EzTransitions > Import Elements` to import some of this package's prebuilt elements for scene-loading, creating and managing custom transitions.
 
 ## Quick Usage
 
@@ -69,11 +68,11 @@ public class SimpleTransitionExample : MonoBehaviour
 
 ## Samples and Best Practices
 
-After Installation, use the menu option `Racer > EzTransitions > Import Elements` to import this package's essential elements(scripts, prefabs) to speed up workflow.
+After installation, use the menu option: `Racer > EzTransitions > Import Elements` to import the prebuilt elements(prefabs, transitions, etc) of this package, which will speed up your workflow. In the case of any updates to newer versions, use the menu option: `Racer > EzTransitions > Import Elements(Force)`. 
 
-Check out this package's sample scene by importing it from the package manager *sample's* tab. It showcases the built-in transitions provided by this package and their usage.
+Optionally import this package's demo from the package manager's `Samples` tab.
 
-*To remove this package completely(leaving no trace), navigate to: `Racer > EzTransitions > Remove package`*
+To remove this package completely(leaving no trace), navigate to: `Racer > EzTransitions > Remove package`
 
 ## [Contributing](https://ebukaracer.github.io/ebukaracer/md/CONTRIBUTING.html) 
 
