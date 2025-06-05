@@ -49,6 +49,7 @@ namespace Racer.EzTransitions.Core
 
         public bool UseTransition
         {
+            get => useTransition;
             set
             {
                 if (!_isLoading)

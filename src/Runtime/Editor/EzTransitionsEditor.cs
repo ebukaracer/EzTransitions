@@ -104,7 +104,7 @@ namespace Racer.EzTransitions.Editor
                     break;
                 }
                 case >= StatusCode.Failure:
-                    Debug.LogWarning($"Failed to remove package: '{PkgId}'");
+                    Debug.LogError($"Failed to remove package: '{PkgId}'");
                     break;
             }
 

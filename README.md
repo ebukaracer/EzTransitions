@@ -8,28 +8,29 @@
 ![gif](https://raw.githubusercontent.com/ebukaracer/ebukaracer/unlisted/EzTransitions-Images/Preview.gif)
 
 ## Features  
-
 - Asynchronous scene loading with optional transition effects.  
 - Customizable transition settings.  
 - Easy-to-use editor tools for creating new transitions.  
 - Elements for managing transitions and scene loading.  
   
 ## Installation
-
- *In unity editor inside package manager:*
-- Hit `(+)`, choose `Add package from Git URL`(Unity 2019.4+)
-- Paste the `URL` for this package inside the box: https://github.com/ebukaracer/EzTransitions.git#upm
-- Hit `Add`
-- If you're using assembly definition in your project, be sure to add this package's reference under: `Assembly Definition References` or check out [this](https://ebukaracer.github.io/ebukaracer/md/SETUPGUIDE.html)
+_Inside the Unity Editor using the Package Manager:_
+- Click the **(+)** button in the Package Manager and select **"Add package from Git URL"** (requires Unity 2019.4 or later).
+-  Paste the Git URL of this package into the input box: https://github.com/ebukaracer/EzTransitions.git#upm
+-  Click **Add** to install the package.
+-  If your project uses **Assembly Definitions**, make sure to add a reference to this package under **Assembly Definition References**. 
+    - For more help, see [this guide](https://ebukaracer.github.io/ebukaracer/md/SETUPGUIDE.html).
 
 ## Setup
-
-After installation, navigate to `Racer > EzTransitions > Import Elements` to import some of this package's prebuilt elements for scene-loading, creating and managing custom transitions.
+After installation, navigate to:  
+`Racer > EzTransitions > Import Elements`\
+This will import prebuilt elements included in the package to assist with scene loading, as well as creating and managing custom transitions.
 
 ## Quick Usage
-
+After you have imported the packages `Elements`, navigate to the prefabs directory: 
 1. Add `SceneLoader` prefab into the desired scene.
-2. Quickly load into the next scene asynchronously using `SceneLoader.Instance`:
+2. Optionally manage the use of transitions(while loading) in the inspector while the prefab is selected.
+3. Quickly load into the next scene asynchronously, using `SceneLoader.Instance` from your script:
 ```csharp
 using Racer.EzTransitions.Core;
 using UnityEngine;
@@ -41,14 +42,14 @@ public class LoadSceneExample : MonoBehaviour
         // Load a scene by name
 	SceneLoader.Instance.LoadSceneAsync("ExampleScene");
 
-        // Load a scene by build index
+        // Or load by its build index
         SceneLoader.Instance.LoadSceneAsync(1);
     }
 }
 ```
 
 1. Add `TransitionManager` prefab into the desired scene.
-2. Perform in/out transitions using `TransitionManager.Instance`:
+2. Perform in/out transitions using `TransitionManager.Instance` from your script:
 ```csharp
 using Racer.EzTransitions.Core;
 using UnityEngine;
@@ -67,13 +68,9 @@ public class SimpleTransitionExample : MonoBehaviour
 ```
 
 ## Samples and Best Practices
-
-After installation, use the menu option: `Racer > EzTransitions > Import Elements` to import the prebuilt elements(prefabs, transitions, etc) of this package, which will speed up your workflow. In the case of any updates to newer versions, use the menu option: `Racer > EzTransitions > Import Elements(Force)`. 
-
-Optionally import this package's demo from the package manager's `Samples` tab.
-
-To remove this package completely(leaving no trace), navigate to: `Racer > EzTransitions > Remove package`
+- In the case of any updates to newer versions, use the menu option: `Racer > EzTransitions > Import Elements(Force)`. 
+- Optionally import this package's demo from the package manager's `Samples` tab.
+- To remove this package completely(leaving no trace), navigate to:  `Racer > EzTransitions > Remove package`
 
 ## [Contributing](https://ebukaracer.github.io/ebukaracer/md/CONTRIBUTING.html) 
-
 Contributions are welcome! Please open an issue or submit a pull request.

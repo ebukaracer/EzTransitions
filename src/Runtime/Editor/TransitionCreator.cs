@@ -70,6 +70,10 @@ namespace Racer.EzTransitions.Editor
                     break;
                 }
             }
+            
+            // Detect mouse click outside controls and remove focus
+            if (Event.current.type == EventType.MouseDown && Event.current.button == 0)
+                GUI.FocusControl(null);
         }
 
         private static void AutoAssignExistingDefaultTransition()

@@ -28,14 +28,16 @@ namespace Racer.EzTransitions.Core
         
         [field: Space(5)] 
         
-        [field: SerializeField, Tooltip("Whether to use this transition's original image color or 'OverrideColor'.")]
+        [field: SerializeField, Tooltip("Whether or not to use the original transition's UI color.")]
         public bool PreserveColor { get; private set; } = true;
 
-        [field: SerializeField, Tooltip("The color to override the transition with.\nHas no effect if 'PreserveColor' is checked.")]
-        public Color OverrideColor { get; private set; } = Color.black;
+        [SerializeField, HideInInspector,
+         Tooltip("New color for the transition UI.")]
+        private Color overrideColor = Color.black;
         // @formatter:on
 
         public float TransitionTime => ClipLength / TransitionSpeed;
         public float DestroyTime => TransitionTime + .15f;
+        public Color OverrideColor => overrideColor;
     }
 }
