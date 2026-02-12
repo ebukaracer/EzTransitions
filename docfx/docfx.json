@@ -42,8 +42,8 @@
       "_appName": "EzTransitions",
       "_appTitle": "Unity Package",
       "_appFooter": "&copy; Racer",
-      "_appLogoPath": "images/openupm-icon.png",
-      "_appFaviconPath": "images/racer-logo.svg",
+      "_appLogoPath": "images/logo.png",
+      "_appFaviconPath": "images/favicon.png",
       "_enableSearch": true,
       "pdf": false
     },

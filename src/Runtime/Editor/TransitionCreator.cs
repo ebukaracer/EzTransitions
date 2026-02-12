@@ -35,11 +35,11 @@ namespace Racer.EzTransitions.Editor
             {
                 try
                 {
-                    CreateFromExistingTransition();
+                    CloneExistingTransition();
                 }
                 catch (Exception e)
                 {
-                    Debug.LogError($"An error occurred while creating the transition: {e.Message}\n{e.StackTrace}");
+                    Debug.LogError($"An error occurred while cloning the transition: {e.Message}\n{e.StackTrace}");
                 }
             }
 
@@ -49,12 +49,11 @@ namespace Racer.EzTransitions.Editor
             {
                 case true when _assignedTransition:
                     EditorGUILayout.HelpBox(
-                        $"A new transition directory, based upon '{_assignedTransition.name}' transition will be created. " +
-                        "Feel free to customize the animations within it to match your desired style.",
+                        $"A new transition folder based on '{_assignedTransition.name}' will be created. You can customize its animations to match your preferred style.",
                         MessageType.Info);
                     break;
                 case true when !_assignedTransition:
-                    EditorGUILayout.HelpBox("Please assign an existing transition first.", MessageType.Warning);
+                    EditorGUILayout.HelpBox("Assign an existing transition first.", MessageType.Warning);
                     break;
                 case false:
                 {
@@ -70,7 +69,7 @@ namespace Racer.EzTransitions.Editor
                     break;
                 }
             }
-            
+
             // Detect mouse click outside controls and remove focus
             if (Event.current.type == EventType.MouseDown && Event.current.button == 0)
                 GUI.FocusControl(null);
@@ -83,7 +82,7 @@ namespace Racer.EzTransitions.Editor
                     $"{TransitionBasePath}/{DefaultTransitionName}/{DefaultTransitionName}.asset");
         }
 
-        private void CreateFromExistingTransition()
+        private void CloneExistingTransition()
         {
             var assignedTransitionName = _assignedTransition?.name;
 
@@ -98,7 +97,6 @@ namespace Racer.EzTransitions.Editor
                 Debug.LogError("The new transition name field cannot be empty.");
                 return;
             }
-
 
             var newTransitionPath = Path.Combine(TransitionBasePath, _transitionNameField);
 

@@ -20,9 +20,15 @@ namespace Racer.EzTransitions.Editor
         private const string RootPath = "Assets/EzTransitions";
         private const string SamplesPath = "Assets/Samples/EzTransitions";
         private const string ElementsAssetPath = RootPath + "/Elements";
+        private const string SceneLoaderPrefabPath = RootPath + "/Elements/Prefabs/SceneLoader.prefab";
+        private const string TransitionManagerPrefabPath = RootPath + "/Elements/Prefabs/TransitionManager.prefab";
 
         private const string ImportElementsContextMenuPath = ContextMenuPath + "Import Elements";
         private const string ForceImportElementsContextMenuPath = ContextMenuPath + "Import Elements(Force)";
+        private const string AddSceneLoaderPrefabToScenePath = ContextMenuPath + "Add SceneLoader Prefab to Scene";
+
+        private const string AddTransitionManagerPrefabToScenePath =
+            ContextMenuPath + "Add TransitionManager Prefab to Scene";
 
 
         [MenuItem(ContextMenuPath + "Transition Creator", priority = 0)]
@@ -32,6 +38,18 @@ namespace Racer.EzTransitions.Editor
             window.maxSize = window.minSize = new Vector2(Dimension, Dimension / 2.5f);
 
             AutoAssignExistingDefaultTransition();
+        }
+
+        private static void ReopenWindow(string pkgName = null)
+        {
+            if (AssetDatabase.IsValidFolder(RootPath) && HasOpenInstances<EzTransitionsEditor>())
+            {
+                GetWindow<EzTransitionsEditor>().Close();
+                ValidateImportElements();
+                DisplayWindow();
+            }
+
+            AssetDatabase.importPackageCompleted -= ReopenWindow;
         }
 
         [MenuItem(ImportElementsContextMenuPath, false, priority = 1)]
@@ -50,42 +68,82 @@ namespace Racer.EzTransitions.Editor
                 EditorUtility.DisplayDialog("Missing Package File", $"{AssetPkgId} not found in the package.", "OK");
         }
 
-        [MenuItem(ForceImportElementsContextMenuPath, false, priority = 1)]
-        private static void ForceImportElements()
-        {
-            ImportElements();
-        }
-
-        [MenuItem(ImportElementsContextMenuPath, true, priority = 1)]
+        [MenuItem(ImportElementsContextMenuPath, true)]
         private static bool ValidateImportElements()
         {
             _isElementsImported = AssetDatabase.IsValidFolder(ElementsAssetPath);
             return !_isElementsImported;
         }
 
-        [MenuItem(ForceImportElementsContextMenuPath, true, priority = 1)]
+        [MenuItem(ForceImportElementsContextMenuPath, false, priority = 2)]
+        private static void ForceImportElements()
+        {
+            ImportElements();
+        }
+
+        [MenuItem(ForceImportElementsContextMenuPath, true)]
         private static bool ValidateForceImportElements()
         {
             return _isElementsImported;
         }
 
-        [MenuItem(ContextMenuPath + "Remove Package(recommended)", priority = 2)]
+        [MenuItem(AddSceneLoaderPrefabToScenePath, false, 3)]
+        private static void AddSceneLoaderPrefabToScene()
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(SceneLoaderPrefabPath);
+
+            if (prefab)
+            {
+                var go = Instantiate(prefab);
+                go.name = prefab.name;
+                Undo.RegisterCreatedObjectUndo(GameObject.Find(go.name), "Add SceneLoader prefab instance to Scene");
+                AddTransitionManagerPrefabToScene();
+            }
+            else
+                EditorUtility.DisplayDialog("Missing Prefab",
+                    "SceneLoader prefab not found in the package.\n\nImport this package's elements and try again",
+                    "OK");
+        }
+
+        [MenuItem(AddSceneLoaderPrefabToScenePath, true)]
+        private static bool ValidateAddSceneLoaderPrefabToScene()
+        {
+            // Validate that the prefab exists and is not already in the scene
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(SceneLoaderPrefabPath);
+            return prefab && !GameObject.Find(prefab.name);
+        }
+
+        [MenuItem(AddTransitionManagerPrefabToScenePath, false, 4)]
+        private static void AddTransitionManagerPrefabToScene()
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(TransitionManagerPrefabPath);
+
+            if (prefab)
+            {
+                var go = Instantiate(prefab);
+                go.name = prefab.name;
+                Undo.RegisterCreatedObjectUndo(GameObject.Find(go.name),
+                    "Add TransitionManager prefab instance to Scene");
+            }
+            else
+                EditorUtility.DisplayDialog("Missing Prefab",
+                    "TransitionManager prefab not found in the package.\n\nImport this package's elements and try again",
+                    "OK");
+        }
+
+        [MenuItem(AddTransitionManagerPrefabToScenePath, true)]
+        private static bool ValidateAddTransitionManagerPrefabToScene()
+        {
+            // Validate that the prefab exists and is not already in the scene
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(TransitionManagerPrefabPath);
+            return prefab && !GameObject.Find(prefab.name);
+        }
+
+        [MenuItem(ContextMenuPath + "Remove Package(recommended)", priority = 10)]
         private static void RemovePackage()
         {
             _removeRequest = Client.Remove(PkgId);
             EditorApplication.update += RemoveProgress;
-        }
-
-        private static void ReopenWindow(string pkgName = null)
-        {
-            if (AssetDatabase.IsValidFolder(RootPath) && HasOpenInstances<EzTransitionsEditor>())
-            {
-                GetWindow<EzTransitionsEditor>().Close();
-                ValidateImportElements();
-                DisplayWindow();
-            }
-
-            AssetDatabase.importPackageCompleted -= ReopenWindow;
         }
 
 
@@ -136,7 +194,8 @@ namespace Racer.EzTransitions.Editor
     internal static class Styles
     {
         public static readonly GUIContent DuplicateBtn =
-            new("Create from Existing?", "Creates a new transition based upon an existing one.");
+            new("Clone",
+                "Creates a copy of the existing transition with the same settings, allowing you to modify it without affecting the original.");
 
         public static readonly GUIContent ImportElementsBtn =
             new("Import Elements", "Imports elements required for creating custom transitions.");

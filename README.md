@@ -22,13 +22,14 @@ _Inside the Unity Editor using the Package Manager:_
     - For more help, see [this guide](https://ebukaracer.github.io/ebukaracer/md/SETUPGUIDE.html).
 
 ## Setup
-After installation, navigate to:  
-`Racer > EzTransitions > Import Elements`\
-This will import prebuilt elements included in the package to assist with scene loading, as well as creating and managing custom transitions.
+After installation, use the menu options in the following order:
+- `Racer > EzTransitions > Import Elements` to import the prebuilt elements(prefabs) of this package, which will speed up your workflow(required).
+- `Racer > EzSaver > Add SceneLoader Prefab to Scene` to add the manager gameobject required for scene loading with optional transition.
+- `Racer > EzSaver > Add TransitionManager Prefab to Scene` to add the manager gameobject required for performing transitions.
 
-## Quick Usage
+## Usage
 After you have imported the packages `Elements`, navigate to the prefabs directory: 
-1. Add `SceneLoader` prefab into the desired scene.
+1. Ensure `SceneLoader` gameobject is present in the scene.
 2. Optionally manage the use of transitions(while loading) in the inspector while the prefab is selected.
 3. Quickly load into the next scene asynchronously, using `SceneLoader.Instance` from your script:
 ```csharp
@@ -40,15 +41,15 @@ public class LoadSceneExample : MonoBehaviour
     public void LoadToScene()
     {
         // Load a scene by name
-	SceneLoader.Instance.LoadSceneAsync("ExampleScene");
+		SceneLoader.Instance.LoadSceneAsync("ExampleScene");
 
         // Or load by its build index
         SceneLoader.Instance.LoadSceneAsync(1);
     }
 }
 ```
-
-1. Add `TransitionManager` prefab into the desired scene.
+---
+1. Ensure `TransitionManager` gameobject is present in the scene.
 2. Perform in/out transitions using `TransitionManager.Instance` from your script:
 ```csharp
 using Racer.EzTransitions.Core;
