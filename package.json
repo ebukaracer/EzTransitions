@@ -1,0 +1,30 @@
+{
+  "name": "com.racer.eztransitions",
+  "displayName": "EzTransitions",
+  "version": "1.4.0",
+  "unity": "2020.3",
+  "description": "An intuitive Unity package for seamless scene transitions and efficient loading support.\n\nBundled with pre-made transitions!",
+  "documentationUrl": "https://ebukaracer.github.io/EzTransitions",
+  "licensesUrl": "https://ebukaracer.github.io/ebukaracer/md/LICENSE.html",
+  "changelogUrl": "https://github.com/ebukaracer/EzTransitions/tags",
+  "author": {
+    "name": "Racer",
+    "url": "https://github.com/ebukaracer"
+  },
+  "category": "Tool",
+  "keywords": [
+    "transitions",
+    "unity-package",
+    "animations",
+    "tool",
+    "package",
+    "UI"
+  ],
+  "samples": [
+    {
+      "displayName": "Demo",
+      "description": "An example scene containing a demo of the package.",
+      "path": "Samples~/Demo"
+    }
+  ]
+}
